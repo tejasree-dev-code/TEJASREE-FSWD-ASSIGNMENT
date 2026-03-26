@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Folder Architect</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Folder Architect</h2>
+
+<ul id="fileList">
+  <li>
+  file1.txt
+  <button onclick="handleCopy('file1.txt')">Copy</button>
+  <button onclick="handleCut('file1.txt')">Cut</button>
+</li>
+
+<li>
+  file2.txt
+  <button onclick="handleCopy('file2.txt')">Copy</button>
+  <button onclick="handleCut('file2.txt')">Cut</button>
+</li>
+
+<button onclick="handlePaste()">Paste</button>
+</ul>
+
+<p id="message"></p>
+
+<script src="script.js"></script>
+</body>
+</html>

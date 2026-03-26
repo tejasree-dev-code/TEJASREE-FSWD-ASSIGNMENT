@@ -1,0 +1,14 @@
+body{
+    font-family: Arial;
+    padding: 20px;
+}
+
+.error{
+    color: red;
+    font-size: 14px;
+}
+
+.success{
+    color:green;
+    font-size: 16px;
+}
