@@ -6,7 +6,7 @@ export default function WeatherApp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_KEY = "c8bb8980f893f48dc6623d450219ee6b";
+  const API_KEY = "process.env.API_KEY";
 
   const fetchWeather = async () => {
     if (!input) {
