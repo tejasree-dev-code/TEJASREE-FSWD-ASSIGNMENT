@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Role Guard Demo</title>
+<style>
+body { font-family: Arial; text-align: center; }
+.hidden { display: none; }
+button { margin: 10px; padding: 10px; }
+</style>
+</head>
+<body>
+<h1>Role Guard System</h1>
+<div id="loginPage">
+  <h2>Login</h2>
+  <button onclick="login('admin')">Login as Admin</button>
+  <button onclick="login('user')">Login as User</button>
+</div>
+<div id="homePage" class="hidden">
+  <h2>Home Page</h2>
+  <p id="welcomeText"></p>
+  <button onclick="goTo('adminPage')">Go to Admin Page</button>
+  <button onclick="goTo('userPage')">Go to User Page</button>
+  <button onclick="logout()">Logout</button>
+</div>
+<div id="adminPage" class="hidden">
+  <h2>Admin Page</h2>
+  <p>Only Admin can see this.</p>
+  <button onclick="goTo('homePage')">Back</button>
+</div>
+<div id="userPage" class="hidden">
+  <h2>User Page</h2>
+  <p>Both Admin & User can see this.</p>
+  <button onclick="goTo('homePage')">Back</button>
+</div>
+<script>
+function login(role) {
+  localStorage.setItem("role", role);
+  showPage("homePage");
+  document.getElementById("welcomeText").innerText = "Logged in as: " + role;
+}
+
+function logout() { localStorage.removeItem("role"); showPage("loginPage"); }
+
+function getRole() { return localStorage.getItem("role"); }
+
+function showPage(pageId) {
+  document.querySelectorAll("div").forEach(div => div.classList.add("hidden"));
+  document.getElementById(pageId).classList.remove("hidden");
+}
+
+function goTo(page) {
+  const role = getRole();
+  if (page === "adminPage" && role !== "admin") { alert("Access Denied! Admins only."); return; }
+  if (!role) { alert("Please login first!"); showPage("loginPage"); return; }
+  showPage(page);
+}
+
+window.onload = function () {
+  const role = getRole();
+  if (role) { showPage("homePage"); document.getElementById("welcomeText").innerText = "Logged in as: " + role; }
+  else { showPage("loginPage"); }
+}
+</script>
+</body>
+</html>

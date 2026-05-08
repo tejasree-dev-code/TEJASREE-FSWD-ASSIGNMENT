@@ -1,0 +1,67 @@
+<!-- Save this as app.html, to be used with a Node.js server -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CRUD Lab with Mongoose</title>
+</head>
+<body>
+<h1>CRUD Operations Lab</h1>
+<form id="createForm">
+  <input type="text" id="name" placeholder="Name" required>
+  <input type="number" id="age" placeholder="Age" required>
+  <button type="submit">Create</button>
+</form>
+<h2>Users</h2>
+<ul id="usersList"></ul>
+<script>
+async function fetchUsers() {
+  const res = await fetch('/users');
+  const users = await res.json();
+  const list = document.getElementById('usersList');
+  list.innerHTML = '';
+  users.forEach(u => {
+    const li = document.createElement('li');
+    li.textContent = `${u.name} (${u.age})`;
+    li.innerHTML += ` <button onclick="deleteUser('${u._id}')">Delete</button>`;
+    li.innerHTML += ` <button onclick="updateUserPrompt('${u._id}', '${u.name}', ${u.age})">Update</button>`;
+    list.appendChild(li);
+  });
+}
+
+async function createUser(event) {
+  event.preventDefault();
+  const name = document.getElementById('name').value;
+  const age = document.getElementById('age').value;
+  await fetch('/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, age })
+  });
+  document.getElementById('createForm').reset();
+  fetchUsers();
+}
+
+async function deleteUser(id) {
+  await fetch(`/users/${id}`, { method: 'DELETE' });
+  fetchUsers();
+}
+
+async function updateUserPrompt(id, oldName, oldAge) {
+  const name = prompt("Enter new name:", oldName);
+  const age = prompt("Enter new age:", oldAge);
+  if (name && age) {
+    await fetch(`/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, age })
+    });
+    fetchUsers();
+  }
+}
+
+document.getElementById('createForm').addEventListener('submit', createUser);
+fetchUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bookstore Pro+</title>
+<style>
+body { font-family: Arial; background: #f4f4f4; margin: 0; }
+header { background: #222; color: white; padding: 15px; text-align: center; }
+.search-bar { text-align: center; margin: 15px; }
+input, select, button { padding: 8px; margin: 5px; }
+#suggestions { background: white; width: 200px; margin: auto; box-shadow: 0 0 5px gray; }
+#suggestions div { padding: 5px; cursor: pointer; }
+#suggestions div:hover { background: lightgray; }
+.container { display: flex; justify-content: space-around; padding: 20px; }
+.box { background: white; padding: 20px; width: 45%; box-shadow: 0 0 10px gray; border-radius: 10px; }
+.grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.card { width: 45%; background: #fff; padding: 10px; box-shadow: 0 0 8px gray; border-radius: 8px; text-align: center; transition: 0.3s; }
+.card:hover { transform: scale(1.05); }
+img { width: 100%; height: 120px; object-fit: cover; border-radius: 5px; }
+button { cursor: pointer; }
+button:hover { opacity: 0.8; }
+.edit { background: orange; }
+.delete { background: red; color: white; }
+</style>
+</head>
+<body>
+<header><h1> Bookstore Pro+</h1></header>
+<div class="search-bar">
+  <input id="search" placeholder="Search books...">
+  <select id="category">
+    <option value="All">All</option>
+    <option value="Tech">Tech</option>
+    <option value="Story">Story</option>
+  </select>
+  <div id="suggestions"></div>
+</div>
+<div class="container">
+  <div class="box">
+    <h2>Books</h2>
+    <input id="bookName" placeholder="Book name">
+    <input id="bookImage" placeholder="Image URL">
+    <select id="bookCategory">
+      <option value="Tech">Tech</option>
+      <option value="Story">Story</option>
+    </select>
+    <select id="bookAuthor"></select>
+    <button onclick="addBook()">Add</button>
+    <div class="grid" id="bookList"></div>
+  </div>
+  <div class="box">
+    <h2>Authors</h2>
+    <input id="authorName" placeholder="Author name">
+    <button onclick="addAuthor()">Add</button>
+    <ul id="authorList"></ul>
+  </div>
+</div>
+<script>
+let books = JSON.parse(localStorage.getItem("books")) || [];
+let authors = JSON.parse(localStorage.getItem("authors")) || [];
+
+function loadAuthorDropdown() {
+  let dropdown = document.getElementById("bookAuthor");
+  dropdown.innerHTML = "";
+  authors.forEach(a => { dropdown.innerHTML += `<option value="${a}">${a}</option>`; });
+}
+
+function displayBooks() {
+  let list = document.getElementById("bookList");
+  let search = document.getElementById("search").value.toLowerCase();
+  let category = document.getElementById("category").value;
+  list.innerHTML = "";
+  books.filter(b => b.name.toLowerCase().includes(search) && (category === "All" || b.category === category))
+    .forEach((b, i) => {
+      list.innerHTML += `<div class="card">
+        <img src="${b.image || 'https://via.placeholder.com/150'}">
+        <h4>${b.name}</h4><p>📂 ${b.category}</p><p>👤 ${b.author || "Unknown"}</p><p>⭐ ${b.rating || 0}</p>
+        <button onclick="rateBook(${i},1)">⭐</button><button onclick="rateBook(${i},2)">⭐⭐</button>
+        <button onclick="rateBook(${i},3)">⭐⭐⭐</button><button onclick="rateBook(${i},4)">⭐⭐⭐⭐</button>
+        <button onclick="rateBook(${i},5)">⭐⭐⭐⭐⭐</button><br>
+        <button class="edit" onclick="editBook(${i})">✏</button>
+        <button class="delete" onclick="deleteBook(${i})">❌</button>
+      </div>`;
+    });
+  localStorage.setItem("books", JSON.stringify(books));
+}
+
+function addBook() {
+  let name = document.getElementById("bookName").value.trim();
+  let image = document.getElementById("bookImage").value.trim();
+  let category = document.getElementById("bookCategory").value;
+  let author = document.getElementById("bookAuthor").value;
+  if(name === "") { alert("Enter book name!"); return; }
+  books.push({ name, image, category, author, rating: 0 });
+  document.getElementById("bookName").value = "";
+  document.getElementById("bookImage").value = "";
+  displayBooks();
+}
+
+function deleteBook(index) { if(confirm("Delete this book?")) { books.splice(index, 1); displayBooks(); } }
+
+function editBook(index) {
+  let newName = prompt("Edit Name:", books[index].name);
+  let newImage = prompt("Edit Image:", books[index].image);
+  let newCategory = prompt("Edit Category:", books[index].category);
+  if(newName) books[index].name = newName;
+  if(newImage) books[index].image = newImage;
+  if(newCategory) books[index].category = newCategory;
+  displayBooks();
+}
+
+function rateBook(index, stars) { books[index].rating = stars; displayBooks(); }
+
+function displayAuthors() {
+  let list = document.getElementById("authorList");
+  list.innerHTML = "";
+  authors.forEach((a, i) => {
+    list.innerHTML += `<li>${a} <button class="edit" onclick="editAuthor(${i})">✏</button> <button class="delete" onclick="deleteAuthor(${i})">❌</button></li>`;
+  });
+  localStorage.setItem("authors", JSON.stringify(authors));
+}
+
+function addAuthor() {
+  let name = document.getElementById("authorName").value.trim();
+  if(name === "") { alert("Enter author name!"); return; }
+  authors.push(name);
+  document.getElementById("authorName").value = "";
+  loadAuthorDropdown(); displayAuthors();
+}
+
+function deleteAuthor(index) { if(confirm("Delete this author?")) { authors.splice(index, 1); loadAuthorDropdown(); displayAuthors(); } }
+
+function editAuthor(index) {
+  let newName = prompt("Edit Author:", authors[index]);
+  if(newName) { authors[index] = newName; loadAuthorDropdown(); displayAuthors(); }
+}
+
+document.getElementById("search").addEventListener("input", function () {
+  let value = this.value.toLowerCase();
+  let box = document.getElementById("suggestions");
+  if(value === "") { box.innerHTML = ""; return; }
+  let matches = books.filter(b => b.name.toLowerCase().includes(value));
+  box.innerHTML = matches.map(b => `<div onclick="selectSuggestion('${b.name}')">${b.name}</div>`).join("");
+});
+
+function selectSuggestion(name) {
+  document.getElementById("search").value = name;
+  document.getElementById("suggestions").innerHTML = "";
+  displayBooks();
+}
+
+document.getElementById("search").addEventListener("input", displayBooks);
+document.getElementById("category").addEventListener("change", displayBooks);
+loadAuthorDropdown(); displayBooks(); displayAuthors();
+</script>
+</body>
+</html>

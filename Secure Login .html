@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Secure Login System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<style>
+body { font-family: Arial; text-align: center; }
+.hidden { display: none; }
+input, button { padding: 10px; margin: 5px; }
+</style>
+</head>
+<body>
+<h1>🔐 Secure Login (JWT + Hash)</h1>
+<div id="signupPage">
+  <h2>Signup</h2>
+  <input id="signupUser" placeholder="Username"><br>
+  <input id="signupPass" type="password" placeholder="Password"><br>
+  <button onclick="signup()">Signup</button>
+  <p>Already have an account? <button onclick="showPage('loginPage')">Login</button></p>
+</div>
+<div id="loginPage" class="hidden">
+  <h2>Login</h2>
+  <input id="loginUser" placeholder="Username"><br>
+  <input id="loginPass" type="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <p>No account? <button onclick="showPage('signupPage')">Signup</button></p>
+</div>
+<div id="dashboard" class="hidden">
+  <h2>Dashboard</h2>
+  <p id="welcome"></p>
+  <button onclick="logout()">Logout</button>
+</div>
+<script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
+function hashPassword(password) { return CryptoJS.SHA256(password).toString(); }
+
+function generateToken(payload) {
+  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const body = btoa(JSON.stringify(payload));
+  const signature = btoa(header + "." + body + "secretKey");
+  return `${header}.${body}.${signature}`;
+}
+
+function verifyToken(token) {
+  try { const parts = token.split("."); return JSON.parse(atob(parts[1])); }
+  catch { return null; }
+}
+
+function signup() {
+  const username = document.getElementById("signupUser").value;
+  const password = document.getElementById("signupPass").value;
+  if (!username || !password) return alert("Fill all fields");
+  users.push({ username, password: hashPassword(password) });
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Signup successful!");
+  showPage("loginPage");
+}
+
+function login() {
+  const username = document.getElementById("loginUser").value;
+  const password = document.getElementById("loginPass").value;
+  const user = users.find(u => u.username === username && u.password === hashPassword(password));
+  if (!user) return alert("Invalid credentials");
+  localStorage.setItem("token", generateToken({ username }));
+  loadDashboard();
+}
+
+function logout() { localStorage.removeItem("token"); showPage("loginPage"); }
+
+function loadDashboard() {
+  const token = localStorage.getItem("token");
+  if (!token) { alert("Unauthorized!"); showPage("loginPage"); return; }
+  const data = verifyToken(token);
+  if (!data) { alert("Invalid token!"); showPage("loginPage"); return; }
+  document.getElementById("welcome").innerText = "Welcome, " + data.username;
+  showPage("dashboard");
+}
+
+function showPage(pageId) {
+  document.querySelectorAll("div").forEach(div => div.classList.add("hidden"));
+  document.getElementById(pageId).classList.remove("hidden");
+}
+
+window.onload = function () {
+  const token = localStorage.getItem("token");
+  if (token) { loadDashboard(); } else { showPage("signupPage"); }
+};
+</script>
+</body>
+</html>

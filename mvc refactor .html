@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MVC Task API (Single File Demo)</title>
+</head>
+<body>
+<h1>Task Manager</h1>
+<input type="text" id="taskInput" placeholder="Enter task" />
+<button onclick="addTask()">Add Task</button>
+<ul id="taskList"></ul>
+<script>
+const API_URL = "http://localhost:3000/api/tasks";
+
+async function getTasks() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+  data.forEach(task => {
+    const li = document.createElement("li");
+    li.innerHTML = `${task.title} <button onclick="deleteTask('${task._id}')">Delete</button>`;
+    list.appendChild(li);
+  });
+}
+
+async function addTask() {
+  const input = document.getElementById("taskInput");
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: input.value })
+  });
+  input.value = "";
+  getTasks();
+}
+
+async function deleteTask(id) {
+  await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  getTasks();
+}
+
+getTasks();
+</script>
+<hr>
+<h2>📦 Backend MVC Code (Reference)</h2>
+<pre>
+/* MODEL */
+const taskSchema = new mongoose.Schema({ title: String, completed: Boolean });
+const Task = mongoose.model("Task", taskSchema);
+
+/* CONTROLLER */
+const taskController = {
+  getTasks: async (req, res) => { const tasks = await Task.find(); res.json(tasks); },
+  createTask: async (req, res) => { const task = new Task(req.body); await task.save(); res.json(task); }
+};
+
+/* ROUTES */
+app.get("/api/tasks", taskController.getTasks);
+app.post("/api/tasks", taskController.createTask);
+</pre>
+</body>
+</html>
